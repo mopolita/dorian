@@ -33,41 +33,41 @@ def ResolveDice(BonusDie, PenaltyDie, Threshold, DiceString) :
   OneResult = RollDie()
 
   if BonusDie > 0 and PenaltyDie > 0:
-      return "Can't chain bonus and penalty dice"
+      return "Impossible d'enchainer des dés bonus et de pénalité"
 
   for i in range(BonusDie):
       TenResultPool.append(RollDie(0, 9))
       TenResult = min(TenResultPool)
-  
+
   for i in range(PenaltyDie):
       TenResultPool.append(RollDie(0, 9))
       TenResult = max(TenResultPool)
 
   CombinedResult = (TenResult*10) + OneResult
   desc = f"""
-Roll: {DiceString}
-Result: {str(TenResult*10)} ({'/'.join([str(i*10) for i in TenResultPool])}) + {str(OneResult)} = {str(CombinedResult)}
+Lancer: {DiceString}
+Résultat: {str(TenResult*10)} ({'/'.join([str(i*10) for i in TenResultPool])}) + {str(OneResult)} = {str(CombinedResult)}
 """
 
   if Threshold:
     ret = DiceResult()
     if CombinedResult == 1:
-      ret.title = "Critical Success!"
+      ret.title = "Réussite Critique !"
       ret.colour = COL_CRIT_SUCCESS
     elif CombinedResult == 100:
-      ret.title = "Critical Failure!"
+      ret.title = "échec Critique !"
       ret.colour = COL_CRIT_FAILURE
     elif CombinedResult <= Threshold/5:
-      ret.title = "Extreme Success!"
+      ret.title = "Réussite Extrême!"
       ret.colour = COL_EXTR_SUCCESS
     elif CombinedResult <= Threshold/2:
-      ret.title = "Hard Success!"
+      ret.title = "Réussite Majeure!"
       ret.colour = COL_HARD_SUCCESS
     elif CombinedResult <= Threshold:
-      ret.title = "Success"
+      ret.title = "Réussite"
       ret.colour = COL_NORM_SUCCESS
     else:
-      ret.title = "Failure"
+      ret.title = "Echec"
       ret.colour = COL_NORM_FAILURE
 
     ret.desc = desc
@@ -81,37 +81,37 @@ def parseRoll(diceString):
 ```
 /croll [[number=1][die type]]...[[score][threshold]]
 
-Die Types:
-    b: Bonus dice (can't be chained with Penalty)
-    p: Penalty dice (can't be chained with Bonus)
-    t: Threshold to determine success/fail. Score is required if a threshold is set.
+Types de dés:
+    b: dé Bonus (Incompatible avec le dé de Pénalité)
+    p: dé de Pénalité (Incompatible avec le dé Bonus)
+    c: Compétence pour déterminer la réussite ou l'échec. Une valeur est requise si l'option est activée.
 
-Examples:
+Exemples:
     /croll
     36
 
-    /croll 60t
-    Hard Success: 24
+    /croll 60c
+    Réussite Majeure: 24
 
     /croll b
     70/30 + 5 = 35
 
-    /croll 2p70t
-    Failure: 0/50/70 + 4 = 74
+    /croll 2p70c
+    Echec: 0/50/70 + 4 = 74
 ```
 """
     fail="""
-Unable to parse dice command. Usage:
+Inpossible de lire la commande. Utilisation:
 """ + help
 
     if diceString == 'help':
         return help
-    
+
     dice=[x for x in re.split('(\d*?[bpt])',diceString) if x]
 
     if len(dice) > 1 and 'b' in diceString and 'p' in diceString:
-        return "Can't chain bonus and penalty dice"
-    
+        return "Impossible d'enchainer des dés bonus et de pénalité"
+
     BonusDie=0
     PenaltyDie=0
     Threshold=False
@@ -135,7 +135,7 @@ Unable to parse dice command. Usage:
             num=1
 
         dieCode=g[1]
-        
+
         if len(dieCode) > 1:
             return fail
 
@@ -145,21 +145,21 @@ Unable to parse dice command. Usage:
         if dieCode == 'p':
             PenaltyDie = num
 
-        if  dieCode == 't':
+        if  dieCode == 'c':
             if default_num:
-              return "Threshold requires a value!"
+              return "Une compétence a besoin d'une valeur !"
             else:
               Threshold = num
-        
+
     return ResolveDice(BonusDie, PenaltyDie, Threshold, diceString)
 
 @bot.slash_command(name="croll")
 async def cthulhu_roll(
     ctx: discord.ApplicationContext,
-    dice: discord.Option(str, "Dice string. Enter 'help' for more details.", default="")
+    dice: discord.Option(str, "Valeur du dé. Entrer 'help' pour plus de détails.", default="")
 ):
     """
-    Call of Cthulhu dice roll.
+    Un lanceur de dés pour l'appel de Cthulhu.
     """
     result = parseRoll(dice)
     if isinstance(result, str):
